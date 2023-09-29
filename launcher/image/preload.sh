@@ -2,9 +2,16 @@
 
 readonly OEM_PATH='/usr/share/oem'
 readonly CS_PATH="${OEM_PATH}/confidential_space"
+readonly EXPERIMENTS_BINARY="confidential_space_experiments"
 
 copy_launcher() {
   cp launcher "${CS_PATH}/cs_container_launcher"
+}
+
+copy_experiment_client() {
+  # DownloadExpBinary creates the file at EXPERIMENTS_BINARY.
+  cp $EXPERIMENTS_BINARY "${CS_PATH}/${EXPERIMENTS_BINARY}"
+  chmod +x "${CS_PATH}/${EXPERIMENTS_BINARY}"
 }
 
 setup_launcher_systemd_unit() {
@@ -90,6 +97,8 @@ main() {
 
   # Install container launcher entrypoint.
   configure_entrypoint "entrypoint.sh"
+  # Install experiment client.
+  copy_experiment_client
   # Install container launcher.
   copy_launcher
   setup_launcher_systemd_unit
@@ -99,10 +108,10 @@ main() {
 
   if [[ "${IMAGE_ENV}" == "debug" ]]; then
     configure_systemd_units_for_debug
-    append_cmdline "'confidential-space.hardened=false'"
+    append_cmdline "confidential-space.hardened=false"
   elif [[ "${IMAGE_ENV}" == "hardened" ]]; then
     configure_systemd_units_for_hardened
-    append_cmdline "'confidential-space.hardened=true'"
+    append_cmdline "confidential-space.hardened=true"
   else
     echo "Unknown image env: ${IMAGE_ENV}." \
          "Only 'debug' and 'hardened' are supported."
